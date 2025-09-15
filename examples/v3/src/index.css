@@ -1,3 +1,6 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Test @source inline */
+@source inline("hover:bg-red-500 focus:ring-4 dark:bg-gray-900");

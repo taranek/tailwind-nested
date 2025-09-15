@@ -10,6 +10,16 @@
   "type": "module",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./lib/index.js",
+      "types": "./lib/index.d.ts"
+    },
+    "./vite": {
+      "import": "./lib/vite.js",
+      "types": "./lib/vite.d.ts"
+    }
+  },
   "files": [
     "lib"
   ],
@@ -17,7 +27,7 @@
     "examples/*"
   ],
   "scripts": {
-    "build": "mkdir -p lib && tsdown src/index.ts -d lib --target=node22 --format=esm --clean --dts",
+    "build": "mkdir -p lib && tsdown src/index.ts src/vite.ts -d lib --target=node22 --format=esm --clean --dts",
     "format": "prettier --experimental-cli --write .",
     "lint": "eslint --cache .",
     "lint:format": "prettier --experimental-cli --cache --check .",

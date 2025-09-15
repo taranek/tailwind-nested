@@ -61,3 +61,5 @@ function processSelectors(selectors: Selectors, prefix = ''): string[] {
 
   return classes;
 }
+
+// Main library exports only - Vite plugin is in separate entry
