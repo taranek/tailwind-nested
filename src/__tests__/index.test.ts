@@ -65,6 +65,31 @@ describe('twn function', () => {
       expect(result).toBe('bg-red-100 hover:div:span:text-white');
     });
 
+    test('should handle complex deeply nested selectors like Tailwind states', () => {
+      const result = twn('grid grid-cols-2', {
+        dark: {
+          md: {
+            hover: {
+              '&': 'bg-fuchsia-600 text-white',
+              'span': 'text-gray-100',
+              'before': 'content-["→"] text-blue-300'
+            },
+            focus: 'ring-2 ring-purple-500'
+          },
+          sm: 'grid-cols-1'
+        },
+        group: {
+          hover: {
+            '&': 'scale-105',
+            'div': {
+              'img': 'opacity-75'
+            }
+          }
+        }
+      });
+      expect(result).toBe('grid grid-cols-2 dark:md:hover:bg-fuchsia-600 dark:md:hover:text-white dark:md:hover:span:text-gray-100 dark:md:hover:before:content-["→"] dark:md:hover:before:text-blue-300 dark:md:focus:ring-2 dark:md:focus:ring-purple-500 dark:sm:grid-cols-1 group:hover:scale-105 group:hover:div:img:opacity-75');
+    });
+
     test('should handle mixed flat and nested selectors', () => {
       const result = twn('bg-red-100', {
         hover: 'bg-red-200',
