@@ -13,6 +13,9 @@
   "files": [
     "lib"
   ],
+  "workspaces": [
+    "examples/*"
+  ],
   "scripts": {
     "build": "mkdir -p lib && tsdown src/index.ts -d lib --target=node22 --format=esm --clean --dts",
     "format": "prettier --experimental-cli --write .",
