@@ -1,4 +1,5 @@
 import type { Plugin } from 'vite';
+import { utimes } from 'fs';
 
 /**
  * Vite plugin to transform twn calls and inject classes directly into Tailwind processing
@@ -7,11 +8,29 @@ import type { Plugin } from 'vite';
  */
 export function twnPlugin(): Plugin {
   const classesSet = new Set<string>();
+  let lastClassesSnapshot = new Set<string>();
   let cssFilePath: string | null = null;
 
+  function forceReloadOnDev() {
+    // Check if classes have changed and update mtime if needed
+    const hasClassesChanged = classesSet.size !== lastClassesSnapshot.size ||
+      !Array.from(classesSet).every(cls => lastClassesSnapshot.has(cls));
+
+    if (hasClassesChanged && cssFilePath && classesSet.size > 0) {
+      const now = new Date();
+      utimes(cssFilePath, now, now, (err) => {
+        if (err) {
+          console.warn('Failed to update CSS file mtime:', err);
+        }
+      });
+
+      // Update snapshot
+      lastClassesSnapshot = new Set(classesSet);
+    }
+  }
   return {
     name: 'twn-plugin',
-    enforce: 'pre', // Run before other plugins (including Tailwind)
+    enforce: 'pre',
 
     transform(code: string, id: string) {
       // Track the CSS file that imports Tailwind
@@ -42,6 +61,23 @@ export function twnPlugin(): Plugin {
             console.warn('Failed to parse twn call:', (error as Error).message);
           }
         }
+      }
+
+
+      // Check if classes have changed and update mtime if needed
+      const hasClassesChanged = classesSet.size !== lastClassesSnapshot.size ||
+        !Array.from(classesSet).every(cls => lastClassesSnapshot.has(cls));
+
+      if (hasClassesChanged && cssFilePath && classesSet.size > 0) {
+        const now = new Date();
+        utimes(cssFilePath, now, now, (err) => {
+          if (err) {
+            console.warn('Failed to update CSS file mtime:', err);
+          }
+        });
+
+        // Update snapshot
+        lastClassesSnapshot = new Set(classesSet);
       }
 
       // If this is the CSS file and we have classes, inject @source inline
