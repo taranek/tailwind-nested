@@ -12,7 +12,7 @@ function App() {
         Hello world!!
       </h1>
       <button className={twn('bg-transparent', {
-        hover: 'bg-blue-700 font-bold shadow-xl transform scale-110 text-black',
+        hover: 'bg-yellow-700 font-bold shadow-xl transform scale-110 text-black',
       })}>
         siema
       </button>
