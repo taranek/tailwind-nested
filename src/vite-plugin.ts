@@ -1,4 +1,4 @@
-import { utimes } from 'fs';
+import { utimes } from 'node:fs';
 import type { Plugin } from 'vite';
 
 /**
@@ -53,7 +53,7 @@ export function twnPlugin(): Plugin {
   function extractTwnCalls(code: string, id: string) {
     if (/\.(ts|tsx|js|jsx)$/.test(id)) {
       const twnRegex =
-        /twn\s*\(\s*[`'"]([^`'"]*)[`'"](?:\s*,\s*\{([^}]*)\})?\s*\)/g;
+        /twn\s*\(\s*["'`]([^"'`]*)["'`](?:\s*,\s*{([^}]*)})?\s*\)/g;
       let match: RegExpExecArray | null;
 
       while ((match = twnRegex.exec(code)) !== null) {
@@ -80,8 +80,8 @@ export function twnPlugin(): Plugin {
   }
 
   return {
-    name: 'twn-plugin',
     enforce: 'pre',
+    name: 'twn-plugin',
 
     transform(code: string, id: string) {
       trackRootCssFile(code, id);
@@ -94,16 +94,16 @@ export function twnPlugin(): Plugin {
 
 export function parseSelectorsObject(selectorContent: string) {
   const parsedClasses = new Set<string>();
-  // Parse nested object structure
+  
+  // Parse nested object structure with proper bracket matching
   const parseLevel = (content: string, prefix = ''): void => {
-    // Match key-value pairs at current level
-    const propRegex =
-      /['"]?([^'":,\s{}]+)['"]?\s*:\s*(?:['"]([^'"]*)['"']|\{([^{}]*)\})/g;
-
+    // Updated regex to handle complex keys with colons and proper string matching
+    const propRegex = /['"]?([^'":\s{}]+(?::[^'":\s{}]+)*)['"]?\s*:\s*(?:['"]([^'"]*)['"]|(\{))/g;
     let match: RegExpExecArray | null;
+    let lastIndex = 0;
 
     while ((match = propRegex.exec(content)) !== null) {
-      const [, key, stringValue, objectValue] = match;
+      const [fullMatch, key, stringValue, objectStart] = match;
 
       if (stringValue !== undefined) {
         // Handle string values
@@ -120,11 +120,27 @@ export function parseSelectorsObject(selectorContent: string) {
             parsedClasses.add(`${currentPrefix}:${cls}`);
           }
         });
-      } else if (objectValue !== undefined) {
-        // Handle nested objects
+      } else if (objectStart) {
+        // Handle nested objects with proper bracket matching
+        let braceCount = 1;
+        let objectEnd = match.index + fullMatch.length;
+        
+        while (braceCount > 0 && objectEnd < content.length) {
+          const char = content[objectEnd];
+          if (char === '{') braceCount++;
+          else if (char === '}') braceCount--;
+          objectEnd++;
+        }
+        
+        const objectContent = content.slice(match.index + fullMatch.length, objectEnd - 1);
         const currentPrefix = prefix ? `${prefix}:${key}` : key;
-        parseLevel(objectValue, currentPrefix);
+        parseLevel(objectContent, currentPrefix);
+        
+        // Update regex lastIndex to continue after the object
+        propRegex.lastIndex = objectEnd;
       }
+      
+      lastIndex = propRegex.lastIndex;
     }
   };
 
