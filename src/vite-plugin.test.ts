@@ -12,37 +12,37 @@ describe('extractTwnCalls', () => {
     it('should process .ts files', () => {
       const code = `
         import 'tailwind-nested';
-        const className = twn("bg-red-500");
+        const className = twn("bg-red-500", { hover: "bg-red-600" });
       `;
       const result = extractTwnCalls(code, 'test.ts');
-      expect(result.has('bg-red-500')).toBe(true);
+      expect(result.has('hover:bg-red-600')).toBe(true);
     });
 
     it('should process .tsx files', () => {
       const code = `
         import 'tailwind-nested';
-        const className = twn("bg-blue-500");
+        const className = twn("bg-blue-500", { hover: "bg-blue-600" });
       `;
       const result = extractTwnCalls(code, 'test.tsx');
-      expect(result.has('bg-blue-500')).toBe(true);
+      expect(result.has('hover:bg-blue-600')).toBe(true);
     });
 
     it('should process .js files', () => {
       const code = `
         import 'tailwind-nested';
-        const className = twn("bg-green-500");
+        const className = twn("bg-green-500", { hover: "bg-green-600" });
       `;
       const result = extractTwnCalls(code, 'test.js');
-      expect(result.has('bg-green-500')).toBe(true);
+      expect(result.has('hover:bg-green-600')).toBe(true);
     });
 
     it('should process .jsx files', () => {
       const code = `
         import 'tailwind-nested';
-        const className = twn("bg-yellow-500");
+        const className = twn("bg-yellow-500", { hover: "bg-yellow-600" });
       `;
       const result = extractTwnCalls(code, 'test.jsx');
-      expect(result.has('bg-yellow-500')).toBe(true);
+      expect(result.has('hover:bg-yellow-600')).toBe(true);
     });
   });
 
@@ -56,10 +56,10 @@ describe('extractTwnCalls', () => {
     it('should process when tailwind-nested is mentioned in import', () => {
       const code = `
         import { twn } from 'tailwind-nested';
-        const className = twn("bg-red-500");
+        const className = twn("bg-red-500", { hover: "bg-red-600" });
       `;
       const result = extractTwnCalls(code, 'test.ts');
-      expect(result.has('bg-red-500')).toBe(true);
+      expect(result.has('hover:bg-red-600')).toBe(true);
     });
 
     it('should NOT process when tailwind-nested is only mentioned in comments', () => {
@@ -73,41 +73,35 @@ describe('extractTwnCalls', () => {
   });
 
   describe('basic class extraction', () => {
-    it('should extract single class from twn call', () => {
+    it('should NOT extract base classes from first parameter', () => {
       const code = `
         import 'tailwind-nested';
         const className = twn("bg-red-500");
       `;
       const result = extractTwnCalls(code, 'test.ts');
-      expect(result.has('bg-red-500')).toBe(true);
-      expect(result.size).toBe(1);
+      expect(result.size).toBe(0); // Base classes are not extracted
     });
 
-    it('should extract multiple classes from single twn call', () => {
+    it('should NOT extract base classes, only selector object classes', () => {
       const code = `
         import 'tailwind-nested';
         const className = twn("bg-red-500 text-white p-4");
       `;
       const result = extractTwnCalls(code, 'test.ts');
-      expect(result.has('bg-red-500')).toBe(true);
-      expect(result.has('text-white')).toBe(true);
-      expect(result.has('p-4')).toBe(true);
-      expect(result.size).toBe(3);
+      expect(result.size).toBe(0); // Base classes are not extracted
     });
 
-    it('should extract classes from multiple twn calls', () => {
+    it('should NOT extract base classes from multiple twn calls', () => {
       const code = `
         import 'tailwind-nested';
         const className1 = twn("bg-red-500");
         const className2 = twn("text-blue-600");
       `;
       const result = extractTwnCalls(code, 'test.ts');
-      expect(result.has('bg-red-500')).toBe(true);
-      expect(result.has('text-blue-600')).toBe(true);
-      expect(result.size).toBe(2);
+      expect(result.size).toBe(0); // Base classes are not extracted
     });
 
-    it('should handle empty class strings', () => {
+    it('should handle empty base classes', () => {
       const code = `
         import 'tailwind-nested';
         const className = twn("");
@@ -116,15 +110,13 @@ describe('extractTwnCalls', () => {
       expect(result.size).toBe(0);
     });
 
-    it('should handle classes with extra whitespace', () => {
+    it('should ignore base classes with whitespace', () => {
       const code = `
         import 'tailwind-nested';
         const className = twn("  bg-red-500   text-white  ");
       `;
       const result = extractTwnCalls(code, 'test.ts');
-      expect(result.has('bg-red-500')).toBe(true);
-      expect(result.has('text-white')).toBe(true);
-      expect(result.size).toBe(2);
+      expect(result.size).toBe(0); // Base classes are not extracted
     });
   });
 
@@ -138,10 +130,9 @@ describe('extractTwnCalls', () => {
         });
       `;
       const result = extractTwnCalls(code, 'test.ts');
-      expect(result.has('base')).toBe(true);
       expect(result.has('md:bg-blue-500')).toBe(true);
       expect(result.has('lg:bg-green-500')).toBe(true);
-      expect(result.size).toBe(3);
+      expect(result.size).toBe(2); // Only selector classes, not base
     });
 
     it('should extract classes from nested selector object', () => {
@@ -155,10 +146,9 @@ describe('extractTwnCalls', () => {
         });
       `;
       const result = extractTwnCalls(code, 'test.ts');
-      expect(result.has('base')).toBe(true);
       expect(result.has('md:hover:bg-blue-500')).toBe(true);
       expect(result.has('md:focus:bg-blue-600')).toBe(true);
-      expect(result.size).toBe(3);
+      expect(result.size).toBe(2); // Only selector classes, not base
     });
 
     it('should handle & selector in nested objects', () => {
@@ -171,9 +161,8 @@ describe('extractTwnCalls', () => {
         });
       `;
       const result = extractTwnCalls(code, 'test.ts');
-      expect(result.has('base')).toBe(true);
       expect(result.has('hover:bg-red-500')).toBe(true);
-      expect(result.size).toBe(2);
+      expect(result.size).toBe(1); // Only selector classes, not base
     });
 
     it('should extract multiple classes from selector values', () => {
@@ -184,11 +173,10 @@ describe('extractTwnCalls', () => {
         });
       `;
       const result = extractTwnCalls(code, 'test.ts');
-      expect(result.has('base')).toBe(true);
       expect(result.has('md:bg-blue-500')).toBe(true);
       expect(result.has('md:text-white')).toBe(true);
       expect(result.has('md:p-4')).toBe(true);
-      expect(result.size).toBe(4);
+      expect(result.size).toBe(3); // Only selector classes, not base
     });
   });
 
@@ -208,12 +196,12 @@ describe('extractTwnCalls', () => {
     it('should handle mixed quote types', () => {
       const code = `
         import 'tailwind-nested';
-        const className1 = twn('bg-red-500');
-        const className2 = twn("bg-blue-500");
+        const className1 = twn('bg-red-500', { hover: 'bg-red-600' });
+        const className2 = twn("bg-blue-500", { focus: "bg-blue-600" });
       `;
       const result = extractTwnCalls(code, 'test.ts');
-      expect(result.has('bg-red-500')).toBe(true);
-      expect(result.has('bg-blue-500')).toBe(true);
+      expect(result.has('hover:bg-red-600')).toBe(true);
+      expect(result.has('focus:bg-blue-600')).toBe(true);
       expect(result.size).toBe(2);
     });
 
@@ -233,11 +221,7 @@ describe('extractTwnCalls', () => {
       `;
       const result = extractTwnCalls(code, 'test.ts');
       
-      // Base classes
-      expect(result.has('base')).toBe(true);
-      expect(result.has('text-black')).toBe(true);
-      
-      // Simple selectors
+      // Only selector classes, not base classes
       expect(result.has('sm:text-sm')).toBe(true);
       expect(result.has('lg:text-lg')).toBe(true);
       
@@ -247,7 +231,7 @@ describe('extractTwnCalls', () => {
       expect(result.has('md:focus:ring-2')).toBe(true);
       expect(result.has('md:focus:ring-blue-300')).toBe(true);
       
-      expect(result.size).toBe(8);
+      expect(result.size).toBe(6);
     });
   });
 

@@ -22,9 +22,6 @@ describe('extractTwnCalls', () => {
 
       const result = extractTwnCalls(code, 'ExpandableButton.tsx');
       expect(result).toEqual(new Set([
-        'p-4',
-        'border',
-        'rounded',
         'aria-[expanded=true]:bg-blue-50',
         'aria-[expanded=true]:border-blue-300',
         'aria-[expanded=true]:[&_svg]:rotate-180',
@@ -49,7 +46,6 @@ describe('extractTwnCalls', () => {
 
       const result = extractTwnCalls(code, 'AccordionItem.ts');
       expect(result).toEqual(new Set([
-        'accordion-item',
         'aria-[expanded=true]:bg-blue-50',
         'aria-[expanded=true]:[&_svg]:rotate-180',
         'aria-[expanded=true]:[&_svg]:transform'
@@ -87,9 +83,6 @@ describe('extractTwnCalls', () => {
 
       const result = extractTwnCalls(code, 'InteractiveButton.tsx');
       expect(result).toEqual(new Set([
-        'flex',
-        'items-center',
-        'justify-between',
         'aria-[expanded=true]:bg-blue-50',
         'aria-[expanded=true]:border-blue-300',
         'aria-[expanded=true]:svg:rotate-180',
@@ -118,10 +111,6 @@ describe('extractTwnCalls', () => {
 
       const result = extractTwnCalls(code, 'CompleteAriaButton.js');
       expect(result).toEqual(new Set([
-        'px-4',
-        'py-2',
-        'font-medium',
-        'transition-all',
         'aria-[expanded=true]:bg-blue-50',
         'aria-[expanded=true]:border-blue-300',
         'aria-[expanded=true]:[&_svg]:rotate-180',
@@ -163,13 +152,11 @@ describe('extractTwnCalls', () => {
 
       const result = extractTwnCalls(code, 'ResponsiveCard.tsx');
       expect(result).toEqual(new Set([
-        'base-card',
         'dark:md:hover:bg-fuchsia-600',
         'dark:md:hover:text-white',
         'dark:md:hover:span:text-gray-100',
         'dark:md:focus:ring-2',
         'dark:md:focus:ring-purple-500',
-        'text-sm',
         'lg:hover:shadow-lg',
         'lg:hover:transform',
         'lg:hover:scale-105'
@@ -195,7 +182,6 @@ describe('extractTwnCalls', () => {
 
       const result = extractTwnCalls(code, 'DataAttributeComponent.tsx');
       expect(result).toEqual(new Set([
-        'component-base',
         'data-[size=large]:p-8',
         'data-[size=large]:text-xl',
         'data-[state=open]:opacity-100',
@@ -222,8 +208,6 @@ describe('extractTwnCalls', () => {
 
       const result = extractTwnCalls(code, 'DragDropComponent.js');
       expect(result).toEqual(new Set([
-        'draggable-item',
-        'cursor-pointer',
         '[&.is-dragging]:opacity-50',
         '[&.is-dragging]:cursor-grabbing',
         '[&:not(.disabled)]:hover:bg-gray-100',
@@ -265,22 +249,13 @@ describe('extractTwnCalls', () => {
 
       const result = extractTwnCalls(code, 'Button.tsx');
       expect(result).toEqual(new Set([
-        'px-4',
-        'py-2',
-        'font-medium',
-        'rounded',
-        'transition-colors',
         'hover:bg-blue-600',
         'hover:text-white',
         'focus:ring-2',
         'focus:ring-blue-500',
         'disabled:opacity-50',
         'disabled:cursor-not-allowed',
-        'bg-blue-500',
-        'text-white',
         'hover:bg-blue-700',
-        'bg-gray-200',
-        'text-gray-800',
         'hover:bg-gray-300'
       ]));
     });
@@ -313,8 +288,6 @@ describe('extractTwnCalls', () => {
 
       const result = extractTwnCalls(code, 'ResponsiveGrid.tsx');
       expect(result).toEqual(new Set([
-        'grid',
-        'gap-4',
         'sm:grid-cols-1',
         'md:grid-cols-2',
         'md:gap-6',
@@ -326,9 +299,6 @@ describe('extractTwnCalls', () => {
         'xl:grid-cols-4',
         'dark:md:bg-gray-800',
         'dark:md:text-white',
-        'p-4',
-        'border',
-        'rounded',
         'md:p-6',
         'hover:md:shadow-md',
         'hover:lg:shadow-lg'
@@ -357,11 +327,6 @@ describe('extractTwnCalls', () => {
 
       const result = extractTwnCalls(code, 'FormInput.jsx');
       expect(result).toEqual(new Set([
-        'w-full',
-        'px-3',
-        'py-2',
-        'border',
-        'rounded',
         'focus:outline-none',
         'focus:ring-2',
         'focus:[&:valid]:ring-green-500',
@@ -401,7 +366,7 @@ describe('extractTwnCalls', () => {
       `;
 
       const result = extractTwnCalls(code, 'MixedImports.tsx');
-      expect(result).toEqual(new Set(['class1']));
+      expect(result).toEqual(new Set()); // No selector object, so no classes extracted
     });
 
     test('should work with renamed twn import', () => {
@@ -416,8 +381,6 @@ describe('extractTwnCalls', () => {
 
       const result = extractTwnCalls(code, 'RenamedTwnImport.tsx');
       expect(result).toEqual(new Set([
-        'bg-blue-500',
-        'text-white',
         'hover:bg-blue-600',
         'focus:ring-2',
         'focus:ring-blue-500'
@@ -436,7 +399,6 @@ describe('extractTwnCalls', () => {
 
       const result = extractTwnCalls(code, 'WhitespaceTest.tsx');
       expect(result).toEqual(new Set([
-        'valid-class',
         'hover:another-class',
         'hover:extra-class'
       ]));

@@ -126,18 +126,9 @@ export function extractTwnCalls(code: string, id: string): Set<string> {
           twnAliases.has(node.callee.name)
         ) {
           const args = node.arguments;
-          if (args.length > 0) {
-            // First argument - base classes
-            if (
-              args[0]?.type === 'Literal' &&
-              typeof args[0].value === 'string'
-            ) {
-              const baseClasses = args[0].value
-                .split(/\s+/)
-                .filter((cls: string) => cls.length > 0);
-              baseClasses.forEach((cls) => extractedClasses.add(cls));
-            }
-
+          if (args.length > 1) {
+            // Only process the second argument (selector object)
+            // First argument (base classes) will be picked up by Tailwind's default scanning
             if (args[1]?.type === 'ObjectExpression') {
               const selectorClasses = extractClassesFromObjectExpression(
                 args[1],
