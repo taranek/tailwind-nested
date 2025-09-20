@@ -1,5 +1,130 @@
 import { utimes } from 'node:fs';
+import { parseSync } from 'oxc-parser';
 import type { Plugin } from 'vite';
+
+function walkAST(node: any, callback: (node: any) => void) {
+  callback(node);
+
+  for (const key in node) {
+    if (
+      key === 'parent' ||
+      key === 'leadingComments' ||
+      key === 'trailingComments'
+    )
+      continue;
+
+    const child = node[key];
+    if (Array.isArray(child)) {
+      child.forEach((item) => {
+        if (item && typeof item === 'object' && item.type) {
+          walkAST(item, callback);
+        }
+      });
+    } else if (child && typeof child === 'object' && child.type) {
+      walkAST(child, callback);
+    }
+  }
+}
+
+function extractClassesFromObjectExpression(objNode: any): Set<string> {
+  const classes = new Set<string>();
+
+  const extractFromObject = (obj: any, prefix = '') => {
+    if (obj.type !== 'ObjectExpression') return;
+
+    obj.properties.forEach((prop: any) => {
+      if (prop.type === 'Property') {
+        let key = '';
+        if (prop.key.type === 'Identifier') {
+          key = prop.key.name;
+        } else if (prop.key.type === 'Literal') {
+          key = String(prop.key.value);
+        }
+
+        const currentPrefix = prefix ? `${prefix}:${key}` : key;
+
+        if (
+          prop.value.type === 'Literal' &&
+          typeof prop.value.value === 'string'
+        ) {
+          // String value - extract classes
+          const classNames = prop.value.value
+            .split(/\s+/)
+            .filter((cls: string) => cls.length > 0);
+          classNames.forEach((cls: string) => {
+            if (key === '&') {
+              classes.add(`${prefix}:${cls}`);
+            } else {
+              classes.add(`${currentPrefix}:${cls}`);
+            }
+          });
+        } else if (prop.value.type === 'ObjectExpression') {
+          // Nested object
+          extractFromObject(prop.value, currentPrefix);
+        }
+      }
+    });
+  };
+
+  extractFromObject(objNode);
+  return classes;
+}
+
+export function extractTwnCalls(code: string, id: string): Set<string> {
+  const extractedClasses = new Set<string>();
+
+  if (!/\.(ts|tsx|js|jsx)$/.test(id)) {
+    return extractedClasses;
+  }
+
+  const useTailwindNested = code.includes('tailwind-nested');
+
+  if (useTailwindNested) {
+    try {
+      const result = parseSync(id, code);
+      if (result.errors.length > 0) {
+        console.warn('Parse errors:', result.errors);
+        return extractedClasses;
+      }
+
+      // Walk the AST to find twn() calls
+      walkAST(result.program, (node: any) => {
+        if (
+          node.type === 'CallExpression' &&
+          node.callee?.type === 'Identifier' &&
+          node.callee.name === 'twn'
+        ) {
+          const args = node.arguments;
+          if (args.length > 0) {
+            // First argument - base classes
+            if (
+              args[0]?.type === 'Literal' &&
+              typeof args[0].value === 'string'
+            ) {
+              const baseClasses = args[0].value
+                .split(/\s+/)
+                .filter((cls: string) => cls.length > 0);
+              baseClasses.forEach((cls) => extractedClasses.add(cls));
+            }
+
+            if (args[1]?.type === 'ObjectExpression') {
+              const selectorClasses = extractClassesFromObjectExpression(
+                args[1],
+              );
+              selectorClasses.forEach((cls) => extractedClasses.add(cls));
+            }
+          }
+        }
+      });
+    } catch (error) {
+      /* eslint-disable-next-line no-console */
+      console.error('Failed to parse with AST:', error);
+      return extractedClasses;
+    }
+  }
+
+  return extractedClasses;
+}
 
 /**
  * Vite plugin to transform twn calls and inject classes directly into Tailwind processing
@@ -21,7 +146,8 @@ export function twnPlugin(): Plugin {
       const now = new Date();
       utimes(cssFilePath, now, now, (err) => {
         if (err) {
-          console.warn('Failed to update CSS file mtime:', err);
+          /* eslint-disable-next-line no-console */
+          console.error('Failed to update CSS file mtime:', err);
         }
       });
 
@@ -50,46 +176,9 @@ export function twnPlugin(): Plugin {
     }
   }
 
-  function extractTwnCalls(code: string, id: string) {
-
-    if (/\.(ts|tsx|js|jsx)$/.test(id)) {
-      const debug = code.includes('SyntaxHigh');
-      if(debug){
-        console.log('EXTRACTING', id, code)
-
-      }
-      const twnRegex =
-        /twn\s*\(\s*["'`]([^"'`]*)["'`](?:\s*,\s*{([^}]*)})?\s*\)/g;
-      let match: RegExpExecArray | null;
-
-      if(debug){
-        console.log('DEBUG match', match)
-      }
-      console.log()
-      while ((match = twnRegex.exec(code)) !== null) {
-        if(debug) {
-          console.log('found a match in', id, match)
-        }
-        const [, baseClasses, selectorContent] = match;
-        try {
-          // Add base classes
-          if (baseClasses) {
-            classesSet = classesSet.union(
-              new Set(baseClasses.split(/\s+/).filter((cls) => cls.length > 0)),
-            );
-          }
-
-          // Parse selector object and collect classes
-          if (selectorContent) {
-            classesSet = classesSet.union(
-              parseSelectorsObject(selectorContent),
-            );
-          }
-        } catch (error) {
-          console.warn('Failed to parse twn call:', (error as Error).message);
-        }
-      }
-    }
+  function extractTwnCallsForPlugin(code: string, id: string) {
+    const extractedClasses = extractTwnCalls(code, id);
+    classesSet = classesSet.union(extractedClasses);
   }
 
   return {
@@ -98,74 +187,9 @@ export function twnPlugin(): Plugin {
 
     transform(code: string, id: string) {
       trackRootCssFile(code, id);
-      extractTwnCalls(code, id);
+      extractTwnCallsForPlugin(code, id);
       forceReloadOnDev();
       return injectClasses(code, id);
     },
   };
-}
-
-export function parseSelectorsObject(selectorContent: string) {
-  const parsedClasses = new Set<string>();
-  const debug = selectorContent.includes('mordzia');
-  if(debug) {
-    console.log('PARSING', selectorContent)
-  }
-  // Parse nested object structure with proper bracket matching
-  const parseLevel = (content: string, prefix = ''): void => {
-    const propRegex =
-      /['"]?([^'":\s{}]+(?::[^'":\s{}]+)*)['"]?\s*:\s*(?:['"]([^'"]*)['"]|(\{))/g;
-    let match: RegExpExecArray | null;
-    let lastIndex = 0;
-
-    while ((match = propRegex.exec(content)) !== null) {
-      const [fullMatch, key, stringValue, objectStart] = match;
-
-      if (stringValue !== undefined) {
-        // Handle string values
-        const currentPrefix = prefix ? `${prefix}:${key}` : key;
-        const classes = stringValue
-          .split(/\s+/)
-          .filter((cls) => cls.length > 0);
-
-        classes.forEach((cls) => {
-          if (key === '&') {
-            // Special case for '&' - use prefix without the key
-            parsedClasses.add(`${prefix}:${cls}`);
-          } else {
-            parsedClasses.add(`${currentPrefix}:${cls}`);
-          }
-        });
-      } else if (objectStart) {
-        // Handle nested objects with proper bracket matching
-        let braceCount = 1;
-        let objectEnd = match.index + fullMatch.length;
-
-        while (braceCount > 0 && objectEnd < content.length) {
-          const char = content[objectEnd];
-          if (char === '{') braceCount++;
-          else if (char === '}') braceCount--;
-          objectEnd++;
-        }
-
-        const objectContent = content.slice(
-          match.index + fullMatch.length,
-          objectEnd - 1,
-        );
-        const currentPrefix = prefix ? `${prefix}:${key}` : key;
-        parseLevel(objectContent, currentPrefix);
-
-        // Update regex lastIndex to continue after the object
-        propRegex.lastIndex = objectEnd;
-      }
-
-      lastIndex = propRegex.lastIndex;
-    }
-  };
-
-  parseLevel(selectorContent);
-  if(debug){
-    console.log(`PARSED from`, parsedClasses, selectorContent)
-  }
-  return parsedClasses;
 }
