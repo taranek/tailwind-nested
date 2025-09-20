@@ -51,19 +51,32 @@ export function twnPlugin(): Plugin {
   }
 
   function extractTwnCalls(code: string, id: string) {
+
     if (/\.(ts|tsx|js|jsx)$/.test(id)) {
+      const debug = code.includes('SyntaxHigh');
+      if(debug){
+        console.log('EXTRACTING', id, code)
+
+      }
       const twnRegex =
         /twn\s*\(\s*["'`]([^"'`]*)["'`](?:\s*,\s*{([^}]*)})?\s*\)/g;
       let match: RegExpExecArray | null;
 
+      if(debug){
+        console.log('DEBUG match', match)
+      }
+      console.log()
       while ((match = twnRegex.exec(code)) !== null) {
+        if(debug) {
+          console.log('found a match in', id, match)
+        }
         const [, baseClasses, selectorContent] = match;
         try {
           // Add base classes
           if (baseClasses) {
-            classesSet = classesSet.union(new Set(baseClasses
-              .split(/\s+/)
-              .filter((cls) => cls.length > 0)))
+            classesSet = classesSet.union(
+              new Set(baseClasses.split(/\s+/).filter((cls) => cls.length > 0)),
+            );
           }
 
           // Parse selector object and collect classes
@@ -94,11 +107,14 @@ export function twnPlugin(): Plugin {
 
 export function parseSelectorsObject(selectorContent: string) {
   const parsedClasses = new Set<string>();
-  
+  const debug = selectorContent.includes('mordzia');
+  if(debug) {
+    console.log('PARSING', selectorContent)
+  }
   // Parse nested object structure with proper bracket matching
   const parseLevel = (content: string, prefix = ''): void => {
-    // Updated regex to handle complex keys with colons and proper string matching
-    const propRegex = /['"]?([^'":\s{}]+(?::[^'":\s{}]+)*)['"]?\s*:\s*(?:['"]([^'"]*)['"]|(\{))/g;
+    const propRegex =
+      /['"]?([^'":\s{}]+(?::[^'":\s{}]+)*)['"]?\s*:\s*(?:['"]([^'"]*)['"]|(\{))/g;
     let match: RegExpExecArray | null;
     let lastIndex = 0;
 
@@ -124,26 +140,32 @@ export function parseSelectorsObject(selectorContent: string) {
         // Handle nested objects with proper bracket matching
         let braceCount = 1;
         let objectEnd = match.index + fullMatch.length;
-        
+
         while (braceCount > 0 && objectEnd < content.length) {
           const char = content[objectEnd];
           if (char === '{') braceCount++;
           else if (char === '}') braceCount--;
           objectEnd++;
         }
-        
-        const objectContent = content.slice(match.index + fullMatch.length, objectEnd - 1);
+
+        const objectContent = content.slice(
+          match.index + fullMatch.length,
+          objectEnd - 1,
+        );
         const currentPrefix = prefix ? `${prefix}:${key}` : key;
         parseLevel(objectContent, currentPrefix);
-        
+
         // Update regex lastIndex to continue after the object
         propRegex.lastIndex = objectEnd;
       }
-      
+
       lastIndex = propRegex.lastIndex;
     }
   };
 
   parseLevel(selectorContent);
+  if(debug){
+    console.log(`PARSED from`, parsedClasses, selectorContent)
+  }
   return parsedClasses;
 }
