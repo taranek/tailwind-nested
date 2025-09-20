@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'vitest';
 import { extractTwnCalls } from '../../vite-plugin';
 
-describe('extractTwnCalls - Complete File Scenarios', () => {
-  describe('InteractiveAriaDemo scenarios', () => {
+describe('extractTwnCalls', () => {
+  describe('aria selectors scenarios', () => {
     test('should extract classes from aria-expanded with nested selectors', () => {
       const code = `
         import { twn } from 'tailwind-nested';
@@ -402,6 +402,26 @@ describe('extractTwnCalls - Complete File Scenarios', () => {
 
       const result = extractTwnCalls(code, 'MixedImports.tsx');
       expect(result).toEqual(new Set(['class1']));
+    });
+
+    test('should work with renamed twn import', () => {
+      const code = `
+        import { twn as twnAlias } from 'tailwind-nested';
+        
+        const styles = twnAlias("bg-blue-500 text-white", {
+          hover: "bg-blue-600",
+          focus: "ring-2 ring-blue-500"
+        });
+      `;
+
+      const result = extractTwnCalls(code, 'RenamedTwnImport.tsx');
+      expect(result).toEqual(new Set([
+        'bg-blue-500',
+        'text-white',
+        'hover:bg-blue-600',
+        'focus:ring-2',
+        'focus:ring-blue-500'
+      ]));
     });
 
     test('should handle empty and whitespace classes', () => {

@@ -87,12 +87,43 @@ export function extractTwnCalls(code: string, id: string): Set<string> {
         return extractedClasses;
       }
 
-      // Walk the AST to find twn() calls
+      // First pass: collect twn import aliases
+      const twnAliases = new Set<string>();
+      let hasTailwindNestedImport = false;
+      
+      walkAST(result.program, (node: any) => {
+        if (node.type === 'ImportDeclaration' && 
+            node.source?.type === 'Literal' && 
+            node.source.value === 'tailwind-nested') {
+          hasTailwindNestedImport = true;
+          
+          // Check if this is a side-effect import (no specifiers)
+          if (!node.specifiers || node.specifiers.length === 0) {
+            twnAliases.add('twn'); // Assume twn is available globally
+          } else {
+            node.specifiers.forEach((spec: any) => {
+              if (spec.type === 'ImportSpecifier' && 
+                  spec.imported?.name === 'twn') {
+                twnAliases.add(spec.local?.name || 'twn');
+              } else if (spec.type === 'ImportDefaultSpecifier') {
+                twnAliases.add(spec.local?.name || 'twn');
+              }
+            });
+          }
+        }
+      });
+
+      // If no tailwind-nested imports found, skip processing this file
+      if (!hasTailwindNestedImport || twnAliases.size === 0) {
+        return extractedClasses;
+      }
+
+      // Second pass: find function calls using any of the aliases
       walkAST(result.program, (node: any) => {
         if (
           node.type === 'CallExpression' &&
           node.callee?.type === 'Identifier' &&
-          node.callee.name === 'twn'
+          twnAliases.has(node.callee.name)
         ) {
           const args = node.arguments;
           if (args.length > 0) {

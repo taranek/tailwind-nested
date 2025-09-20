@@ -62,13 +62,13 @@ describe('extractTwnCalls', () => {
       expect(result.has('bg-red-500')).toBe(true);
     });
 
-    it('should process when tailwind-nested is mentioned in comments', () => {
+    it('should NOT process when tailwind-nested is only mentioned in comments', () => {
       const code = `
         // Using tailwind-nested for styling
         const className = twn("bg-red-500");
       `;
       const result = extractTwnCalls(code, 'test.ts');
-      expect(result.has('bg-red-500')).toBe(true);
+      expect(result.size).toBe(0); // Should be empty since there's no actual import
     });
   });
 
