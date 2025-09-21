@@ -5,7 +5,7 @@
   "license": "MIT",
   "author": {
     "name": "Tomasz Taranek",
-    "email": "t.taranek27@gmail.com"
+    "url": "https://github.com/taranek"
   },
   "type": "module",
   "main": "./lib/index.js",
