@@ -1,11 +1,35 @@
 {
   "name": "tailwind-nested",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Organize your Tailwind CSS classes with nested selectors",
+  "keywords": [
+    "tailwindcss",
+    "tailwind",
+    "css",
+    "classes",
+    "classname",
+    "classlist",
+    "merge",
+    "override",
+    "nested",
+    "nesting",
+    "selectors",
+    "styling",
+    "vite",
+    "typescript"
+  ],
   "license": "MIT",
   "author": {
     "name": "Tomasz Taranek",
     "url": "https://github.com/taranek"
+  },
+  "homepage": "https://github.com/taranek/tailwind-nested#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/taranek/tailwind-nested.git"
+  },
+  "bugs": {
+    "url": "https://github.com/taranek/tailwind-nested/issues"
   },
   "type": "module",
   "main": "./lib/index.js",
