@@ -27,6 +27,8 @@ With tailwind-nested, organize your styles with clean, nested objects:
 
 ```jsx
 // ✅ With tailwind-nested - organized and maintainable
+import { twn } from 'tailwind-nested';
+
 <button className={twn('px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg transition-all duration-200', {
   // Interactive states
   hover: 'bg-blue-700 shadow-lg scale-105',
