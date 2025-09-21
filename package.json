@@ -1,7 +1,7 @@
 {
   "name": "tailwind-nested",
   "version": "0.0.1",
-  "description": "Library.",
+  "description": "Organize your Tailwind CSS classes with nested selectors",
   "license": "MIT",
   "author": {
     "name": "Tomasz Taranek",

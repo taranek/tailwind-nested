@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+docs/node_modules/
+examples/*/node_modules/
+
+# Build outputs (keep lib/ for published package)
+.next/
+.astro/
+.vite/
+
+# Development files
+.env*
+.DS_Store
+*.log
+*.lock
+.claude/
+bun.lockb
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Git
+.git/
+.gitignore
+
+# Documentation build
+docs/
+
+# Examples
+examples/
+
+# Test files
+coverage/
+.nyc_output/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+
+src/__tests__/

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { extractTwnCalls } from './vite-plugin';
+import { extractTwnCalls } from '../vite-plugin.ts';
 
 describe('extractTwnCalls', () => {
   describe('file type filtering', () => {
@@ -220,17 +220,17 @@ describe('extractTwnCalls', () => {
         });
       `;
       const result = extractTwnCalls(code, 'test.ts');
-      
+
       // Only selector classes, not base classes
       expect(result.has('sm:text-sm')).toBe(true);
       expect(result.has('lg:text-lg')).toBe(true);
-      
+
       // Nested selectors
       expect(result.has('md:hover:bg-blue-500')).toBe(true);
       expect(result.has('md:hover:text-white')).toBe(true);
       expect(result.has('md:focus:ring-2')).toBe(true);
       expect(result.has('md:focus:ring-blue-300')).toBe(true);
-      
+
       expect(result.size).toBe(6);
     });
   });

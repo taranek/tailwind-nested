@@ -25,7 +25,6 @@ function InteractiveAriaDemo() {
           'aria-[expanded=false]': 'bg-gray-50 border-gray-300',
           hover: 'shadow-sm',
           focus: 'outline-none ring-2 ring-blue-500',
-          eluwina: 'mordzia',
           'aria-[expanded=true]': {
             '&': 'bg-blue-50 border-blue-300',
             '[&_svg]': 'rotate-180'
