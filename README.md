@@ -97,6 +97,7 @@ Highlight the repeated variants as object keys, then list only the necessary uti
 import { twn } from 'tailwind-nested';
 
 <button className={twn('bg-blue-500 text-white px-4 py-2 rounded-md font-medium', {
+  dark: 'bg-blue-600',
   hover: 'bg-blue-600 shadow-lg transform scale-105',
   focus: 'outline-none ring-2 ring-blue-500 ring-offset-2',
 })}>
