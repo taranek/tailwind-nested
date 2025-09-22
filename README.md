@@ -207,4 +207,4 @@ function FormDemo() {
 
 - 🎯 **TypeScript support** - Basic intellisense for Tailwind variants  
 - ✨ **Nested selectors** - Organize complex state combinations
-- ⚡  **Vite plugin** - Extract classnames at build time for no performance overhead
+- ⚡ **Vite plugin** - Extract classnames at build time for no performance overhead
