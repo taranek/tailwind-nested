@@ -221,4 +221,3 @@ function FormDemo() {
 - Astro (class extraction plugin doesn't work with Astro's build process)
 - Webpack, Rollup, or other bundlers (plugin support coming soon)
 
-> **Note:** You can still use the `twn()` function in Astro projects, but you'll need to manually ensure all generated classes are included in your Tailwind configuration or use `safelist` for dynamic classes.
